@@ -63,7 +63,7 @@ int main(void)
     while (1) // loop forever, blinking the LED
     {
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-        HAL_Delay(250);  // 250 milliseconds == 1/4 second
+        HAL_Delay(100);  // 250 milliseconds == 1/4 second
     }
 #endif
 
@@ -72,7 +72,7 @@ int main(void)
 
     while (true) {
         uint32_t now = HAL_GetTick();
-        if (now > 5000 && now < 10000)
+        if (now > 3000 && now < 15000)
             HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
         else
             HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);  // turn off LED
