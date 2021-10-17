@@ -63,7 +63,7 @@ int main(void)
     while (1) // loop forever, blinking the LED
     {
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-        HAL_Delay(100);  // 250 milliseconds == 1/4 second
+        HAL_Delay(1000);  // 250 milliseconds == 1/4 second
     }
 #endif
 
@@ -273,5 +273,3 @@ void SysTick_Handler(void)
     HAL_IncTick(); // tell HAL that a new tick has happened
     // we can do other things in here too if we need to, but be careful
 }
-
-// lololloll
