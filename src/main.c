@@ -8,11 +8,12 @@
 // To run a particular example, you should remove the comment (//) in
 // front of exactly ONE of the following lines:
 
-#define BUTTON_BLINK
-// #define LIGHT_SCHEDULER
-// #define TIME_RAND
-// #define KEYPAD
-// #define KEYPAD_CONTROL
+#define PATTERN_MATCH   // our own function to be implemented for the game.
+// #define BUTTON_BLINK    --> concepts to be used
+//#define LIGHT_SCHEDULER   --> concepts to be used
+//#define TIME_RAND
+// #define KEYPAD   --> concepts to be used
+//#define KEYPAD_CONTROL    --> concepts to be used
 // #define SEVEN_SEGMENT
 // #define KEYPAD_SEVEN_SEGMENT
 // #define COLOR_LED
@@ -25,6 +26,42 @@
 #include <stdlib.h>  // srand() and random() functions
 
 #include "ece198.h"
+
+int random_int(int min, int max);
+int random_int(int min, int max) { //a random number generator between a max and min value. (of int type)
+   return min+(rand()%(max-min+1));
+}
+size_t sequence_lengthGENERATOR();
+size_t sequence_lengthGENERATOR() { //sequence will be between 5-10 in length.
+    return random_int(5,10);
+}
+size_t const length();
+size_t const length () { //constant that can be used for identifying length in the PATTERN_MATCHER
+    size_t i = sequence_lengthGENERATOR();
+    return i;
+}
+
+
+int * rand_output_generation(size_t (*size)());
+int * rand_output_generation(size_t (*size)()) { //assigns the sequence of indexes of ports at which light will be flashed
+    int * array;
+    array = malloc(size());
+    for (int i=0; i<size(); i++) {
+        array[i] = random_int(1,6);
+    }
+    return array;
+    free(array);
+    array = NULL;
+}
+
+bool compare(int *outputs, int *inputs, int currIndx);
+bool compare(int *outputs, int *inputs, int currIndx) {
+    if (outputs[currIndx]==inputs[currIndx]) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 int main(void)
 {
@@ -51,6 +88,80 @@ int main(void)
 
     // as mentioned above, only one of the following code sections will be used
     // (depending on which of the #define statements at the top of this file has been uncommented)
+
+#ifdef PATTERN_MATCH    
+    //general Description of lock given to users via Serial Port
+    SerialPuts("Welcome to the Pattern Matcher lock. For this stage in the escape room game, \n");
+    SerialPuts("you will have to correctly detect the Pattern of lights being presented.\n");
+    SerialPuts("Please push the black button on the right to begin.");
+    
+    //output the lights (using pins and ports)
+    //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
+    int * outputIndx_Arr = rand_output_generation(length);
+    //function to randomly generate array of which pin to direct to. Will use 'if' statements to further initialize each 1-6 value to a specified port.  
+    
+
+    //input generation begins.
+    InitializeKeypad(); // initializes the keypad for inputs
+    while (true)
+    {
+        char *keypad_symbols = "123A456B789C*0#D"; //used from KEYPAD() function.
+        size_t num_elements = length(); 
+        int elements[num_elements]; //main array for keypad input elements.
+        for (int i=0; i<num_elements; i++) {
+            elements[i] = 999; //initializes each elements value originally as 999.
+        }
+        for (int i=0; i<num_elements; i++) {
+            while (ReadKeypad() < 0);   // wait for a valid key.
+            int key = ReadKeypad();
+            SerialPutc(keypad_symbols[key]);  // look up its ASCII symbol and send it to the host.
+            if (key == 3) { // if A is pressed, exit game
+                int i=0;
+                while (i<6) // blinking the LED 3 times to indicate exit.
+                {
+                    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+                    HAL_Delay(500);  // 250 milliseconds == 1/4 second
+                    i++;
+                }
+                exit(0);
+            }
+            while ((key!=0) && (key!=1) && (key!=2) && (key!=4) && (key!=5) && (key!=6)) {  //1-6 is only valid for this pattern matcher.
+                SerialPuts("\nError. Input was out of range. Please enter a number between 1 and 6:");
+                key = ReadKeypad();
+                SerialPutc(keypad_symbols[key]);
+                if (key == 3) { // if A is pressed, exit game
+                    int i=0;
+                    while (i<6) // blinking the LED 3 times to indicate exit.
+                    {
+                        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+                        HAL_Delay(500);  // 250 milliseconds == 1/4 second
+                        i++;
+                    }
+                    exit(0);
+                }
+            }
+            if (key>=0 && key<3) {  // assign input key value into index of array.
+                elements[i] = (key+1);
+            } else if (key>=4 && key<7) {
+                elements[i] = key;
+            }
+
+            if (compare(outputIndx_Arr, elements,i) == true) {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
+            } else {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn on LED
+            }
+
+
+/*
+            if (key == 3) // top-right key in a 4x4 keypad, usually 'A'
+                HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);   // toggle LED on or off     
+            if (key == 2)
+                HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); */
+            while (ReadKeypad() >= 0);  // wait until key is released   
+        }
+    }
+#endif
 
 #ifdef BUTTON_BLINK
     // Wait for the user to push the blue button, then blink the LED.
@@ -86,8 +197,8 @@ int main(void)
     // Note that you must have "#include <stdlib.h>"" at the top of your main.c
     // in order to use the srand() and random() functions.
 
-    // while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));  // wait for button press
-    // srand(HAL_GetTick());  // set the random seed to be the time in ms that it took to press the button
+    while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));  // wait for button press
+    srand(HAL_GetTick());  // set the random seed to be the time in ms that it took to press the button
     // if the line above is commented out, your program will get the same sequence of random numbers
     // every time you run it (which may be useful in some cases)
 
@@ -130,12 +241,12 @@ int main(void)
 
     InitializeKeypad();
     while (true)
-    {
+    {   
         while (ReadKeypad() < 0);   // wait for a valid key
         int key = ReadKeypad();
-        if (key == 3)  // top-right key in a 4x4 keypad, usually 'A'
-            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);   // toggle LED on or off
-         while (ReadKeypad() >= 0);  // wait until key is released
+        if (key == 3) // top-right key in a 4x4 keypad, usually 'A'
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);   // toggle LED on or off     
+        while (ReadKeypad() >= 0);  // wait until key is released   
     }
 #endif
 
