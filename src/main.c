@@ -27,30 +27,36 @@
 
 #include "ece198.h"
 
-int random_int(int min, int max);
-int random_int(int min, int max) { //a random number generator between a max and min value. (of int type)
-   return min+(rand()%(max-min+1));
+int random_int(int min, int max, long randnum);
+int random_int(int min, int max, long randnum) { //a random number generator between a max and min value. (of int type)
+   return min+((randnum)%(max-min+1));
 }
-size_t sequence_lengthGENERATOR();
-size_t sequence_lengthGENERATOR() { //sequence will be between 5-10 in length.
-    return random_int(5,10);
+int sequence_lengthGENERATOR();
+int sequence_lengthGENERATOR() { //sequence will be between 8-12 in length.
+    while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
+    srand(HAL_GetTick());
+    return random_int(8,12,random());
 }
-size_t const length();
-size_t const length () { //constant that can be used for identifying length in the PATTERN_MATCHER
-    size_t i = sequence_lengthGENERATOR();
+int const length();
+int const length () { //constant that can be used for identifying length in the PATTERN_MATCHER
+    int i = sequence_lengthGENERATOR();
     return i;
 }
 
 
-int * rand_output_generation(size_t (*size)());
-int * rand_output_generation(size_t (*size)()) { //assigns the sequence of indexes of ports at which light will be flashed
+int * rand_output_generation(int (*size)());
+int * rand_output_generation(int (*size)()) { //assigns the sequence of indexes of ports at which light will be flashed
+    while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
+    srand(HAL_GetTick());
     int * array;
-    array = malloc(size());
-    for (int i=0; i<size(); i++) {
-        array[i] = random_int(1,6);
+    array = malloc(size()); //allocating the new array pointer.
+    for (int i=0; i<size(); i++) {  //assign random corresponding light number to blink.
+        HAL_Delay(random_int(5,9, random()));
+        array[i] = random_int(1,6, random());
+        SerialPutc(array[i]+48);
     }
     return array;
-    free(array);
+    free(array); //de-allocating the array.
     array = NULL;
 }
 
@@ -63,8 +69,80 @@ bool compare(int *outputs, int *inputs, int currIndx) {
     }
 }
 
+bool level(int lvl_num) {  //main code for one level iteration
+    if(lvl_num == 1) {//general Description of lock given to users via Serial Port
+        SerialPuts("\nWelcome to the Pattern Matcher lock. For this stage in the escape room game, \n");
+        SerialPuts("you will have to correctly detect the Pattern of lights being presented.\n");
+        SerialPuts("Use the keypad at hand to input your anwers. Each LED has been assigned a number 1-6.\n");
+        SerialPuts("To exit the game, Press A on the Keypad.\n");
+        SerialPuts("You will need to pass all three levels in order to break through the lock. Good luck!\n\n");
+    }
+    SerialPuts("(Press blue button on board to start level)\n\n");
+
+    //output the lights (using pins and ports)
+    //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
+    int * outputIndx_Arr = rand_output_generation(length);
+    for(int i=0; i<length(); i++) {
+        SerialPutInt(outputIndx_Arr[i]);
+    }
+    //function to randomly generate array of which pin to direct to. Will use 'if' statements to further initialize each 1-6 value to a specified port.  
+    
+
+    //input generation begins.
+    InitializeKeypad(); // initializes the keypad for inputs
+    while (true)
+    {
+        char *keypad_symbols = "123A456B789C*0#D"; //used from KEYPAD() function.
+        size_t num_elements = length(); 
+        int elements[num_elements]; //main array for keypad input elements.
+        for (int count=0; count<num_elements; count++) {
+            elements[count] = 999; //initializes each elements value originally as 999.
+        }
+        for (int i=0; i<num_elements; i++) {
+            while (ReadKeypad() < 0);   // wait for a valid key.
+            int key = ReadKeypad();
+            SerialPutc(keypad_symbols[key]);  // look up its ASCII symbol and send it to the host.
+            if (key == 3) { // if A is pressed, exit game
+                int r=0;
+                SerialPuts("\n\nEnding game. Hope to see you try again.");
+                while (r<6) // blinking the LED 3 times to indicate exit.
+                {
+                    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+                    HAL_Delay(500);  // 250 milliseconds == 1/4 second
+                    r++;
+                    if(r==5 && HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_5) == 0) {
+                        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);
+                    }
+                }
+                exit(0);
+            }
+            if ((key!=0) && (key!=1) && (key!=2) && (key!=4) && (key!=5) && (key!=6)) {  //1-6 is only valid for this pattern matcher.
+                SerialPuts("\nError. Input was out of range. Please enter a number between 1 and 6 only.");
+                i--; //decrement i by 1 to avoid array index errors.
+            }
+            if (key>=0 && key<3) {  // assign input key value into index of array.
+                elements[i] = (key+1);    //for 1-3
+            } else if (key>=4 && key<7) {
+                elements[i] = key;   //for 4-6
+            }
+            while (ReadKeypad() >= 0);  // wait until key is released   
+        }
+        for (int j=0; j<num_elements; j++) {  //check if each output and input matches.
+            if (compare(outputIndx_Arr, elements,j) == false) { //if one is caught false, then output false for the level.
+                return false;   
+            }
+        }
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
+        SerialPuts("Great Work! Level passed!"); //message to serial.
+        HAL_Delay(5000);
+        return true;
+    }
+}
+
 int main(void)
 {
+    int iteration_num = 1; //check which level the game is on.
+
     HAL_Init(); // initialize the Hardware Abstraction Layer
 
     // Peripherals (including GPIOs) are disabled by default to save power, so we
@@ -90,76 +168,23 @@ int main(void)
     // (depending on which of the #define statements at the top of this file has been uncommented)
 
 #ifdef PATTERN_MATCH    
-    //general Description of lock given to users via Serial Port
-    SerialPuts("Welcome to the Pattern Matcher lock. For this stage in the escape room game, \n");
-    SerialPuts("you will have to correctly detect the Pattern of lights being presented.\n");
-    SerialPuts("Please push the black button on the right to begin.");
-    
-    //output the lights (using pins and ports)
-    //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
-    int * outputIndx_Arr = rand_output_generation(length);
-    //function to randomly generate array of which pin to direct to. Will use 'if' statements to further initialize each 1-6 value to a specified port.  
-    
-
-    //input generation begins.
-    InitializeKeypad(); // initializes the keypad for inputs
-    while (true)
-    {
-        char *keypad_symbols = "123A456B789C*0#D"; //used from KEYPAD() function.
-        size_t num_elements = length(); 
-        int elements[num_elements]; //main array for keypad input elements.
-        for (int i=0; i<num_elements; i++) {
-            elements[i] = 999; //initializes each elements value originally as 999.
+    bool success = level(iteration_num);
+    while (success && iteration_num<3) { // run this for first two levels
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn off LED
+        iteration_num++;
+        success = level(iteration_num);
+    } // after third level occurs, while loop doesn't run. But if was success, ends game and unlocks the "lock".
+    if (success) {
+        SerialPuts("Congratulations. You passed all three levels and fully unlocked the lock! Get out before the lock locks you up again!");
+        uint32_t now = HAL_GetTick();
+        while ((HAL_GetTick()-now) < 900000) { //continue flashing the blinking LED of success for max. 15 min., users have the ability to disconnect the system or press reset button to their own wish at this point. 
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
         }
-        for (int i=0; i<num_elements; i++) {
-            while (ReadKeypad() < 0);   // wait for a valid key.
-            int key = ReadKeypad();
-            SerialPutc(keypad_symbols[key]);  // look up its ASCII symbol and send it to the host.
-            if (key == 3) { // if A is pressed, exit game
-                int i=0;
-                while (i<6) // blinking the LED 3 times to indicate exit.
-                {
-                    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-                    HAL_Delay(500);  // 250 milliseconds == 1/4 second
-                    i++;
-                }
-                exit(0);
-            }
-            while ((key!=0) && (key!=1) && (key!=2) && (key!=4) && (key!=5) && (key!=6)) {  //1-6 is only valid for this pattern matcher.
-                SerialPuts("\nError. Input was out of range. Please enter a number between 1 and 6:");
-                key = ReadKeypad();
-                SerialPutc(keypad_symbols[key]);
-                if (key == 3) { // if A is pressed, exit game
-                    int i=0;
-                    while (i<6) // blinking the LED 3 times to indicate exit.
-                    {
-                        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-                        HAL_Delay(500);  // 250 milliseconds == 1/4 second
-                        i++;
-                    }
-                    exit(0);
-                }
-            }
-            if (key>=0 && key<3) {  // assign input key value into index of array.
-                elements[i] = (key+1);
-            } else if (key>=4 && key<7) {
-                elements[i] = key;
-            }
-
-            if (compare(outputIndx_Arr, elements,i) == true) {
-                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
-            } else {
-                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn on LED
-            }
-
-
-/*
-            if (key == 3) // top-right key in a 4x4 keypad, usually 'A'
-                HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);   // toggle LED on or off     
-            if (key == 2)
-                HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); */
-            while (ReadKeypad() >= 0);  // wait until key is released   
-        }
+        exit(0); //exit program automatically if nothing occurs within the 15 min.
+    } else {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn off LED
+        SerialPuts("Oh no! You were unable to break the lock. Hope to see you try again!");
+        exit(0);   
     }
 #endif
 

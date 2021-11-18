@@ -73,6 +73,15 @@ char SerialGetc()
     return UART_Handle.Instance->DR;  // return the incoming character
 }
 
+//send an integer to the serial port
+
+void SerialPutInt(int ml)
+{
+    while ((UART_Handle.Instance->SR & USART_SR_TXE) == 0)
+        ;                          // wait for transmitter buffer to be empty
+    UART_Handle.Instance->DR = ml+48;  // send the integer
+}
+
 // send a single character out the serial port
 
 void SerialPutc(char c)
