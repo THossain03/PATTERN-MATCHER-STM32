@@ -11,6 +11,7 @@ HAL_StatusTypeDef SerialSetup(uint32_t baudrate);
 char SerialGetc();
 void SerialGets(char *buff, int maxlen);
 
+void SerialPutInt(int i);
 void SerialPutc(char c);
 void SerialPuts(char *ptr);
 
