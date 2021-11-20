@@ -37,12 +37,6 @@ int sequence_lengthGENERATOR() { //sequence will be between 8-12 in length.
     srand(HAL_GetTick());
     return random_int(8,12,random());
 }
-int const length();
-int const length () { //constant that can be used for identifying length in the PATTERN_MATCHER
-    int i = sequence_lengthGENERATOR();
-    return i;
-}
-
 
 int * rand_output_generation(int (*size)());
 int * rand_output_generation(int (*size)()) { //assigns the sequence of indexes of ports at which light will be flashed
@@ -79,9 +73,11 @@ bool level(int lvl_num) {  //main code for one level iteration
     }
     SerialPuts("(Press blue button on board to start level)\n\n");
 
+    size_t num_elements = sequence_lengthGENERATOR();  // generate a length that will be used by this variable throughout the level.
+
     //output the lights (using pins and ports)
     //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
-    int * outputIndx_Arr = rand_output_generation(length);
+    int * outputIndx_Arr = rand_output_generation(num_elements);
     for(int i=0; i<length(); i++) {
         SerialPutInt(outputIndx_Arr[i]);
     }
@@ -93,7 +89,6 @@ bool level(int lvl_num) {  //main code for one level iteration
     while (true)
     {
         char *keypad_symbols = "123A456B789C*0#D"; //used from KEYPAD() function.
-        size_t num_elements = length(); 
         int elements[num_elements]; //main array for keypad input elements.
         for (int count=0; count<num_elements; count++) {
             elements[count] = 999; //initializes each elements value originally as 999.
@@ -134,6 +129,10 @@ bool level(int lvl_num) {  //main code for one level iteration
         }
         return true; //else, simply return true.
     }
+    free(num_elements);
+    free(outputIndx_Arr);
+    outputIndx_Arr = NULL;
+    
 }
 
 int main(void)
