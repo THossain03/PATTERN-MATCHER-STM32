@@ -9,8 +9,8 @@
 // front of exactly ONE of the following lines:
 
 #define PATTERN_MATCH   // our own function to be implemented for the game.
-// #define BUTTON_BLINK    --> concepts to be used
-//#define LIGHT_SCHEDULER   --> concepts to be used
+//#define BUTTON_BLINK    //--> concepts to be used
+//#define LIGHT_SCHEDULER   //--> concepts to be used
 //#define TIME_RAND
 // #define KEYPAD   --> concepts to be used
 //#define KEYPAD_CONTROL    --> concepts to be used
@@ -132,7 +132,7 @@ bool level(int lvl_num) {  //main code for one level iteration
     free(num_elements);
     free(outputIndx_Arr);
     outputIndx_Arr = NULL;
-    
+
 }
 
 int main(void)
@@ -190,15 +190,28 @@ int main(void)
 #ifdef BUTTON_BLINK
     // Wait for the user to push the blue button, then blink the LED.
 
+    InitializePin(GPIOA, GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // on-board LED
+    InitializePin(GPIOA, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);
     // wait for button press (active low)
+    /*for (int i=0; i<6; i++) {
+        while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13))
+        {
+        }
+        if (i==0) {
+            HAL_GPIO_WritePin(GPIOA, GPIOP)
+        }
+    }*/
     while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13))
     {
+
     }
 
     while (1) // loop forever, blinking the LED
     {
-        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-        HAL_Delay(1000);  // 250 milliseconds == 1/4 second
+        
+        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7); 
+        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);  
+        HAL_Delay(1000);
     }
 #endif
 
@@ -312,15 +325,19 @@ int main(void)
     // Remember that each of those three pins must go through a 220 ohm current-limiting resistor!
     // Also remember that the longest pin on the LED should be hooked up to GND.
 
-    InitializePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // initialize color LED output pins
+    InitializePin(GPIOA, GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // initialize color LED output pins
     while (true) {
         for (int color = 0; color < 8; ++color) {
             // bottom three bits indicate which of the three LEDs should be on (eight possible combinations)
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, color & 0x01);  // blue  (hex 1 == 0001 binary)
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, color & 0x02);  // green (hex 2 == 0010 binary)
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, color & 0x04);  // red   (hex 4 == 0100 binary)
-
-            while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));   // wait for button press 
+            while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));   // wait for button press
+            if(color%3 == 0) {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, color & 0x04);  // blue  (hex 1 == 0001 binary)
+            } else if (color%3 == 1) {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, color & 0x06);  // green (hex 2 == 0010 binary)
+            } else {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, color & 0x02);  // red   (hex 4 == 0100 binary)
+            }
+ 
             while (!HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));  // wait for button release
         }
     }
