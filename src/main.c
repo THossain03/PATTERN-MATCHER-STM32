@@ -53,6 +53,7 @@ int * rand_output_generation(int (*size)()) { //assigns the sequence of indexes 
     free(array); //de-allocating the array.
     array = NULL;
 }
+
 //push back removal
 void output_by_LED(int LED_indx);  //outputting every specified LED for 1 second. 
 void output_by_LED(int LED_indx) {
@@ -100,8 +101,6 @@ void output_by_LED(int LED_indx) {
         exit(0);
     }
 }
-=======
->>>>>>> fc190bddcffa8664449adb4d2d6170ece340862b
 
 bool compare(int *outputs, int *inputs, int currIndx);
 bool compare(int *outputs, int *inputs, int currIndx) {
@@ -111,8 +110,6 @@ bool compare(int *outputs, int *inputs, int currIndx) {
         return false;
     }
 }
-
-//hi
 
 bool level(int lvl_num) {  //main code for one level iteration
     if(lvl_num == 1) {//general Description of lock given to users via Serial Port
