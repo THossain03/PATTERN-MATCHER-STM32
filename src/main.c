@@ -53,7 +53,7 @@ int * rand_output_generation(int size) { //assigns the sequence of indexes of po
     free(array); //de-allocating the array.
     array = NULL;
 }
-
+//push back removal
 void output_by_LED(int LED_indx);  //outputting every specified LED for 1 second. 
 void output_by_LED(int LED_indx) {
     InitializePin(GPIOA, GPIO_PIN_1, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-1
