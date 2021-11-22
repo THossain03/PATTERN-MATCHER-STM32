@@ -38,16 +38,15 @@ int sequence_lengthGENERATOR() { //sequence will be between 8-12 in length.
     return random_int(8,12,random());
 }
 
-int * rand_output_generation(int (*size)());
-int * rand_output_generation(int (*size)()) { //assigns the sequence of indexes of ports at which light will be flashed
+int * rand_output_generation(int size);
+int * rand_output_generation(int size) { //assigns the sequence of indexes of ports at which light will be flashed
     while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
     srand(HAL_GetTick());
     int * array;
-    array = malloc(size()); //allocating the new array pointer.
-    for (int i=0; i<size(); i++) {  //assign random corresponding light number to blink.
+    array = malloc(size); //allocating the new array pointer.
+    for (int i=0; i<size; i++) {  //assign random corresponding light number to blink.
         HAL_Delay(random_int(5,9, random()));
         array[i] = random_int(1,6, random());
-        SerialPutc(array[i]+48);
     }
     return array;
     free(array); //de-allocating the array.
@@ -125,9 +124,12 @@ bool level(int lvl_num) {  //main code for one level iteration
 
     //output the lights (using pins and ports)
     //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
-    int * outputIndx_Arr = rand_output_generation(num_elements);
-    for(int i=0; i<length(); i++) {
-        SerialPutInt(outputIndx_Arr[i]);
+    int * outputIndx_Arr;
+    outputIndx_Arr = malloc(num_elements);
+    outputIndx_Arr = rand_output_generation(num_elements);
+    for(int i=0; i<num_elements; i++) {
+        output_by_LED(outputIndx_Arr[i]);
+        SerialPutInt(outputIndx_Arr[i]); //***** DELETE this when program is fully debugged.
     }
     //function to randomly generate array of which pin to direct to. Will use 'if' statements to further initialize each 1-6 value to a specified port.  
     
@@ -137,7 +139,8 @@ bool level(int lvl_num) {  //main code for one level iteration
     while (true)
     {
         char *keypad_symbols = "123A456B789C*0#D"; //used from KEYPAD() function.
-        int elements[num_elements]; //main array for keypad input elements.
+        int * elements;
+        elements = malloc(num_elements); //main array for keypad input elements.
         for (int count=0; count<num_elements; count++) {
             elements[count] = 999; //initializes each elements value originally as 999.
         }
@@ -176,8 +179,9 @@ bool level(int lvl_num) {  //main code for one level iteration
             }
         }
         return true; //else, simply return true.
+        free(elements);
+        elements = NULL;
     }
-    free(num_elements);
     free(outputIndx_Arr);
     outputIndx_Arr = NULL;
 
