@@ -94,8 +94,8 @@ void output_by_LED(int LED_indx) {
     }
 }
 
-bool compare(int *outputs, int *inputs, int currIndx);
-bool compare(int *outputs, int *inputs, int currIndx) {
+bool compare(int outputs [], int inputs [], int currIndx);
+bool compare(int outputs [], int inputs [], int currIndx) {
     if (outputs[currIndx]==inputs[currIndx]) {
         return true;
     } else {
@@ -117,15 +117,16 @@ bool level(int lvl_num) {  //main code for one level iteration
 
     //output the lights (using pins and ports)
     //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
-    int * outputIndx_Arr;
-    outputIndx_Arr = malloc(num_elements);
-    outputIndx_Arr = rand_output_generation(num_elements);
+    int outputIndx_Arr[num_elements];
+    *outputIndx_Arr = *rand_output_generation(num_elements);
+    //outputIndx_Arr = malloc(num_elements);
+    //outputIndx_Arr = rand_output_generation(num_elements);
     for(int i=0; i<num_elements; i++) {
-        //output_by_LED(outputIndx_Arr[i]);
+        output_by_LED(outputIndx_Arr[i]);
     }
     //function to randomly generate array of which pin to direct to. Will use 'if' statements to further initialize each 1-6 value to a specified port.  
-    int * elements;
-    elements = malloc(num_elements); //main array for keypad input elements.
+    int elements[num_elements];
+    //elements = malloc(num_elements); //main array for keypad input elements.
 
     //input generation begins.
     InitializeKeypad(); // initializes the keypad for inputs
@@ -151,7 +152,7 @@ bool level(int lvl_num) {  //main code for one level iteration
                         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);
                     }
                 }
-                exit(0);
+                exit(0); //terminate game.
             }
             if ((key!=0) && (key!=1) && (key!=2) && (key!=4) && (key!=5) && (key!=6)) {  //1-6 is only valid for this pattern matcher.
                 SerialPuts("\nError. Input was out of range. Please enter a number between 1 and 6 only.");
@@ -165,22 +166,23 @@ bool level(int lvl_num) {  //main code for one level iteration
             while (ReadKeypad() >= 0);  // wait until key is released   
         }
         for (int j=0; j<num_elements; j++) {  //check if each output and input matches.
-            if (compare(outputIndx_Arr, elements,j) == false) { //if one is caught false, then output false for the level.
+            if (compare(outputIndx_Arr, elements, j) == false) { //if one is caught false, then output false for the level.
                 return false;   
             }
         }
         return true; //else, simply return true.
     }
-    free(outputIndx_Arr);
+    /*free(outputIndx_Arr);
     outputIndx_Arr = NULL;
     free(elements);
-    elements = NULL;
+    elements = NULL;*/
 
 }
 
 int main(void)
 {
     int iteration_num = 1; //check which level the game is on.
+    bool success; // checks success on a level/game.
 
     HAL_Init(); // initialize the Hardware Abstraction Layer
 
@@ -207,7 +209,7 @@ int main(void)
     // (depending on which of the #define statements at the top of this file has been uncommented)
 
 #ifdef PATTERN_MATCH    
-    bool success = level(iteration_num);
+    success = level(iteration_num);
     while (success && iteration_num<3) { // run this for first two levels
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
         SerialPuts("\nGreat Work! Level passed! Preparing next level...\n"); //message to serial.
