@@ -51,17 +51,16 @@ int * rand_output_generation(int size) { //assigns the sequence of indexes of po
     }
     return array;
     free(array); //de-allocating the array.
-    array = NULL;
 }
 
 //push back removal
 void output_by_LED(int LED_indx);  //outputting every specified LED for 1 second. 
 void output_by_LED(int LED_indx) {
-    HAL_Delay(1000);
+    HAL_Delay(400);
     InitializePin(GPIOA, GPIO_PIN_1, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-1
-    InitializePin(GPIOA, GPIO_PIN_2, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-2
-    InitializePin(GPIOA, GPIO_PIN_10, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-3
-    InitializePin(GPIOA, GPIO_PIN_3, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-4
+    InitializePin(GPIOA, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-2
+    InitializePin(GPIOA, GPIO_PIN_4, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-3
+    InitializePin(GPIOA, GPIO_PIN_9, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-4
     InitializePin(GPIOA, GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-5
     InitializePin(GPIOA, GPIO_PIN_0, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-6
     if (LED_indx==1) {
@@ -69,17 +68,17 @@ void output_by_LED(int LED_indx) {
         HAL_Delay(1000);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, false);
     } else if (LED_indx==2) {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, true);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, true);
         HAL_Delay(1000);
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, false);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, false);
     } else if (LED_indx==3) {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, true);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, true);
         HAL_Delay(1000);
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, false);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, false);
     } else if (LED_indx==4) {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, true);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, true);
         HAL_Delay(1000);
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, false);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, false);
     } else if (LED_indx==5) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, true);
         HAL_Delay(1000);
@@ -92,6 +91,9 @@ void output_by_LED(int LED_indx) {
         SerialPuts("\n***\nAn error has occurred. Lock will be terminated immediately. Please try again.");
         exit(0);
     }
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);
+    HAL_Delay(300);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);
 }
 
 bool compare(int outputs [], int inputs [], int currIndx);
@@ -117,18 +119,20 @@ bool level(int lvl_num) {  //main code for one level iteration
 
     //output the lights (using pins and ports)
     //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
-    int outputIndx_Arr[num_elements];
-    *outputIndx_Arr = *rand_output_generation(num_elements);
-    //outputIndx_Arr = malloc(num_elements);
-    //outputIndx_Arr = rand_output_generation(num_elements);
+    int * outputIndx_Arr;//[num_elements];
+    //*outputIndx_Arr = *rand_output_generation(num_elements);
+    outputIndx_Arr = malloc(num_elements);
+    outputIndx_Arr = rand_output_generation(num_elements);
     for(int i=0; i<num_elements; i++) {
         output_by_LED(outputIndx_Arr[i]);
     }
     //function to randomly generate array of which pin to direct to. Will use 'if' statements to further initialize each 1-6 value to a specified port.  
-    int elements[num_elements];
-    //elements = malloc(num_elements); //main array for keypad input elements.
+    int *elements;//[num_elements];
+    elements = malloc(num_elements); //main array for keypad input elements.
 
     //input generation begins.
+    SerialPuts("\n(Press blue button on board to start inputs)\n");
+    while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)); //
     InitializeKeypad(); // initializes the keypad for inputs
     while (true)
     {
@@ -172,11 +176,10 @@ bool level(int lvl_num) {  //main code for one level iteration
         }
         return true; //else, simply return true.
     }
-    /*free(outputIndx_Arr);
-    outputIndx_Arr = NULL;
+    free(outputIndx_Arr);
+    //outputIndx_Arr = NULL;
     free(elements);
-    elements = NULL;*/
-
+    //elements = NULL;
 }
 
 int main(void)
