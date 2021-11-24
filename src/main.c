@@ -58,42 +58,39 @@ void output_by_LED(int LED_indx);  //outputting every specified LED for 1 second
 void output_by_LED(int LED_indx) {
     HAL_Delay(400);
     InitializePin(GPIOA, GPIO_PIN_1, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-1
-    InitializePin(GPIOA, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-2
+    InitializePin(GPIOA, GPIO_PIN_0, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-2
     InitializePin(GPIOA, GPIO_PIN_4, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-3
-    InitializePin(GPIOA, GPIO_PIN_9, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-4
+    InitializePin(GPIOB, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-4
     InitializePin(GPIOA, GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-5
-    InitializePin(GPIOA, GPIO_PIN_0, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-6
+    InitializePin(GPIOA, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-6
     if (LED_indx==1) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, true);
         HAL_Delay(1000);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, false);
     } else if (LED_indx==2) {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, true);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, true);
         HAL_Delay(1000);
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, false);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, false);
     } else if (LED_indx==3) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, true);
         HAL_Delay(1000);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, false);
     } else if (LED_indx==4) {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, true);
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, true);
         HAL_Delay(1000);
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, false);
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, false);
     } else if (LED_indx==5) {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, true);
+        HAL_Delay(1000);
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, false);
+    } else if (LED_indx==6) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, true);
         HAL_Delay(1000);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, false);
-    } else if (LED_indx==6) {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, true);
-        HAL_Delay(1000);
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, false);
     } else {  //we do not want a frustration for users in instances where they see they did it right, but got it wrong according to the program.
         SerialPuts("\n***\nAn error has occurred. Lock will be terminated immediately. Please try again.");
         exit(0);
     }
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);
-    HAL_Delay(300);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);
 }
 
 bool compare(int outputs [], int inputs [], int currIndx);
@@ -119,16 +116,19 @@ bool level(int lvl_num) {  //main code for one level iteration
 
     //output the lights (using pins and ports)
     //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
-    int * outputIndx_Arr;//[num_elements];
-    //*outputIndx_Arr = *rand_output_generation(num_elements);
+    int * outputIndx_Arr;
     outputIndx_Arr = malloc(num_elements);
     outputIndx_Arr = rand_output_generation(num_elements);
     for(int i=0; i<num_elements; i++) {
         output_by_LED(outputIndx_Arr[i]);
     }
-    //function to randomly generate array of which pin to direct to. Will use 'if' statements to further initialize each 1-6 value to a specified port.  
-    int *elements;//[num_elements];
-    elements = malloc(num_elements); //main array for keypad input elements.
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);
+    HAL_Delay(300);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,false); //to show through hardware that outputting is finished.
+
+    //input array declarations.
+    int *elements;//main array for keypad input elements.
+    elements = malloc(num_elements); 
 
     //input generation begins.
     SerialPuts("\n(Press blue button on board to start inputs)\n");
