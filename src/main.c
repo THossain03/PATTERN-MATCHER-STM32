@@ -134,7 +134,9 @@ bool level(int lvl_num) {  //main code for one level iteration
         SerialPuts("To exit the game, Press A on the Keypad.\n");
         SerialPuts("You will need to pass all three levels in order to break through the lock. Good luck!\n\n");
     }
-    SerialPuts("(Press blue button on board to start level)\n\n"); 
+    SerialPuts("(Press blue button on board to start level ");
+    SerialPutc(lvl_num+48);
+    SerialPuts(")\n\n"); 
 
     size_t num_elements = sequence_lengthGENERATOR(lvl_num);  // generate a length that will be used by this variable throughout the level.
 
