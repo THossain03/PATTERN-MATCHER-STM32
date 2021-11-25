@@ -25,11 +25,17 @@ int random_int(int min, int max, long randnum);
 int random_int(int min, int max, long randnum) { //a random number generator between a max and min value. (of int type)
    return min+((randnum)%(max-min+1));
 }
-int sequence_lengthGENERATOR();
-int sequence_lengthGENERATOR() { //sequence will be between 8-12 in length.
+int sequence_lengthGENERATOR(int lvl_num);
+int sequence_lengthGENERATOR(int lvl_num) { //sequence will be between 4-12, 7-9, 10-12 depending on the level
     while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
     srand(HAL_GetTick());
-    return random_int(8,12,random());
+    if(lvl_num==1){ //Level 1 the sequencing willing be between 4-6
+        return random_int(4,6,random());
+    }else if(lvl_num==2){ //Level 2 the sequencing willing be between 7-9
+        return random_int(7,9,random()); 
+    }else{ //Level 3 the sequencing willing be between 10-12
+        return random_int(10,12,random());
+    }
 }
 
 int * rand_output_generation(int size);
@@ -106,7 +112,7 @@ bool level(int lvl_num) {  //main code for one level iteration
     }
     SerialPuts("(Press blue button on board to start level)\n\n");
 
-    size_t num_elements = sequence_lengthGENERATOR();  // generate a length that will be used by this variable throughout the level.
+    size_t num_elements = sequence_lengthGENERATOR(lvl_num);  // generate a length that will be used by this variable throughout the level.
 
     //output the lights (using pins and ports)
     //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
