@@ -198,7 +198,22 @@ bool level(int lvl_num) {  //main code for one level iteration
         }
         for (int j=0; j<num_elements; j++) {  //check if each output and input matches.
             if (compare(outputIndx_Arr, elements, j) == false) { //if one is caught false, then output false for the level.
+                SerialPuts("\nOh no! You were unable to break the lock.");
+                SerialPuts("The correct combination was: "); //added here so output array can still be accessed.
+                for (int k=0; k<num_elements; k++) {
+                    SerialPutc(outputIndx_Arr[k]+48);
+                    if (k != (num_elements-1)) {
+                        SerialPuts(", ");
+                    }
+                }
                 return false;   
+            }
+        }
+        SerialPuts("\nGreat Work! Level passed! You have correctly determined the combination: ");
+        for (int k=0; k<num_elements; k++) {
+            SerialPutc(outputIndx_Arr[k]+48);
+            if (k != (num_elements-1)) {
+                SerialPuts(", ");
             }
         }
         return true; //else, simply return true.
@@ -241,7 +256,7 @@ int main(void)
     success = level(iteration_num); //1st level call.
     while (success && iteration_num<5) { // run this for first four levels to check success.
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
-        SerialPuts("\nGreat Work! Level passed! Preparing next level...\n"); //message to serial.
+        SerialPuts("\nPreparing next level...\n"); //message to serial.
         HAL_Delay(3000); //show for 3 seconds.
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn off LED
         iteration_num++;
@@ -249,13 +264,14 @@ int main(void)
     } // after fifth level occurs, while loop doesn't run. But if was success, ends game and unlocks the "lock".
     if (success) {
         SerialPuts("\nCongratulations. You passed all three levels and fully unlocked the lock! Get out before the lock locks you up again!");
+        //The congratulations statement above can be changed depending on purpose this pattern matcher lock is used inside the escape room.
         uint32_t now = HAL_GetTick();
         while ((HAL_GetTick()-now) < 900000) { //continue flashing the blinking LED of success for max. 15 min., users have the ability to disconnect the system or press reset button to their own wish at this point. 
             HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
         }
         exit(0); //exit program automatically if nothing occurs within the 15 min.
     } else {
-        SerialPuts("\nOh no! You were unable to break the lock. Hope to see you try again!");
+        SerialPuts("\nHope to see you try again!"); // they better! :)
         int r=0;
         while (r<50){ // blinking the LED 50 times to indicate exit.
             HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
