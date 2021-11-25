@@ -215,7 +215,7 @@ int main(void)
     while (success && iteration_num<3) { // run this for first two levels
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
         SerialPuts("\nGreat Work! Level passed! Preparing next level...\n"); //message to serial.
-        HAL_Delay(5000); //show for 5 seconds.
+        HAL_Delay(3000); //show for 3 seconds.
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn off LED
         iteration_num++;
         success = level(iteration_num);
