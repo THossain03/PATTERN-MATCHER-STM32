@@ -25,11 +25,12 @@ int random_int(int min, int max, long randnum);
 int random_int(int min, int max, long randnum) { //a random number generator between a max and min value. (of int type)
    return min+((randnum)%(max-min+1));
 }
+
 int sequence_lengthGENERATOR(int lvl_num);
-int sequence_lengthGENERATOR(int lvl_num) { //sequence will be between 4-12, 7-9, 10-12 depending on the level
+int sequence_lengthGENERATOR(int lvl_num) { //sequence will be between 3-4, 5-6, 7-8, 9-10, 11-12 depending on the level
     while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
     srand(HAL_GetTick());
-    if(lvl_num==1){ //Level 1 the sequencing willing be between 3-4
+    if (lvl_num==1) { //Level 1 the sequencing willing be between 3-4
         return random_int(3,4,random());
     }else if (lvl_num==2){ //Level 2 the sequencing willing be between 5-6
         return random_int(5,6,random());
@@ -51,7 +52,6 @@ int * rand_output_generation(int size) { //assigns the sequence of indexes of po
     for (int i=0; i<size; i++) {  //assign random corresponding light number to blink.
         HAL_Delay(random_int(5,9, random()));
         array[i] = random_int(1,6, random());
-        //SerialPutc(array[i]+48);  //***** DELETE this when program is fully debugged.
     }
     return array;
     free(array); //de-allocating the array.
@@ -60,15 +60,18 @@ int * rand_output_generation(int size) { //assigns the sequence of indexes of po
 //push back removal
 void output_by_LED(int LED_indx, int lvl_num);  //outputting every specified LED for varied seconds as levels progress. 
 void output_by_LED(int LED_indx, int lvl_num) {
-    HAL_Delay(400);
+    HAL_Delay(400); // an initial delay of 400ms to allow users have time to settle prior to level.
+    //initializing each pin to the LED number indicated in the breadboards.
     InitializePin(GPIOA, GPIO_PIN_1, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-1
     InitializePin(GPIOA, GPIO_PIN_0, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-2
     InitializePin(GPIOA, GPIO_PIN_4, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-3
     InitializePin(GPIOB, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-4
     InitializePin(GPIOA, GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-5
     InitializePin(GPIOA, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-6
-    int sec=0;
-    if(lvl_num==1){ //This if-statment will reduce the time the led flashes for as the levels progress
+    int sec;
+    //The following if-statments will reduce the time the led flashes for as the levels progress 
+    //(our program will make flashing time decrease by 250 ms each time)
+    if(lvl_num==1){
         sec=1250;
     }else if (lvl_num==2){
         sec=1000;
@@ -120,34 +123,39 @@ bool compare(int outputs [], int inputs [], int currIndx) { //compares input arr
 }
 
 bool level(int lvl_num) {  //main code for one level iteration
-    if(lvl_num == 1) {//general Description of lock given to users via Serial Port
+    if(lvl_num == 1) {//general Description of lock given to users via Serial Port (only if at level 1)
         SerialPuts("\nWelcome to the Pattern Matcher lock. For this stage in the escape room game, \n");
         SerialPuts("you will have to correctly detect the Pattern of lights being presented.\n");
         SerialPuts("Use the keypad at hand to input your anwers. Each LED has been assigned a number 1-6.\n");
         SerialPuts("To exit the game, Press A on the Keypad.\n");
         SerialPuts("You will need to pass all three levels in order to break through the lock. Good luck!\n\n");
     }
-    SerialPuts("(Press blue button on board to start level)\n\n");
+    SerialPuts("(Press blue button on board to start level)\n\n"); 
 
     size_t num_elements = sequence_lengthGENERATOR(lvl_num);  // generate a length that will be used by this variable throughout the level.
 
     //output the lights (using pins and ports)
-    //arrange difficulty time of output using similar code to LIGHT_SCHEDULER
-    int * outputIndx_Arr;
-    outputIndx_Arr = malloc(num_elements); //allocation of outputs
-    outputIndx_Arr = rand_output_generation(num_elements);
+    int * outputIndx_Arr; //array of output LEDS to be flashed. (1-6 only)
+    outputIndx_Arr = malloc(num_elements); //allocation of the output array
+    outputIndx_Arr = rand_output_generation(num_elements); 
     for(int i=0; i<num_elements; i++) {
         output_by_LED(outputIndx_Arr[i], lvl_num);
+        //SerialPutc(outputIndx_Arr[i]+48);  //***** REMOVE THE COMMENT IF THE OUTPUT ARRAY WANTS TO BE SEEN BY USER (MAINLY FOR TESTING)
     }
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);
     HAL_Delay(300);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,false); //to show through hardware that outputting is finished.
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,false); //to dedicate a message through hardware that outputting is finished.
 
     //input array declarations.
     int elements[num_elements];//main array for keypad input elements.
+    // NOTE: int elements is not implemented as a dynamically allocated pointer array as it lead us to experiencing many errors with the other
+    // allocated outputIndx_Arr aray. This may lead to possible memory leaks (only for the input systems), although highly unlikely given 
+    // we still are able to at least de-allocate the data after each iteration of level().
 
-    //input generation begins.
+    
     HAL_Delay(100); //Waits 1/10 of a second before initializing the keypad.
+
+    //INPUT generation begins.
     InitializeKeypad(); // initializes the keypad for inputs
     while (true)
     {
@@ -162,9 +170,9 @@ bool level(int lvl_num) {  //main code for one level iteration
             if (key == 3) { // if A is pressed, exit game
                 int r=0;
                 SerialPuts("\n\nEnding game. Hope to see you try again.");
-                while (r<6) // blinking the LED 3 times to indicate exit.
+                while (r<6) // blinking the green on-board LED 3 times to indicate exit.
                 {
-                    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+                    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5); 
                     HAL_Delay(500);  // 250 milliseconds == 1/4 second
                     r++;
                     if(r==5 && HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_5) == 0) {
@@ -191,10 +199,9 @@ bool level(int lvl_num) {  //main code for one level iteration
         }
         return true; //else, simply return true.
     }
+    //deallocations of both input and output data arrays.
     free(outputIndx_Arr);
-    //outputIndx_Arr = NULL;  ***DELETE
     free(elements);
-    //elements = NULL;   ***DELETE
 }
 
 int main(void)
@@ -227,15 +234,15 @@ int main(void)
     // (depending on which of the #define statements at the top of this file has been uncommented)
 
 #ifdef PATTERN_MATCH    
-    success = level(iteration_num);
-    while (success && iteration_num<3) { // run this for first two levels
+    success = level(iteration_num); //1st level call.
+    while (success && iteration_num<5) { // run this for first four levels to check success.
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);   // turn on LED
         SerialPuts("\nGreat Work! Level passed! Preparing next level...\n"); //message to serial.
         HAL_Delay(3000); //show for 3 seconds.
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn off LED
         iteration_num++;
-        success = level(iteration_num);
-    } // after third level occurs, while loop doesn't run. But if was success, ends game and unlocks the "lock".
+        success = level(iteration_num);  //run the next level and find if success or not.
+    } // after fifth level occurs, while loop doesn't run. But if was success, ends game and unlocks the "lock".
     if (success) {
         SerialPuts("\nCongratulations. You passed all three levels and fully unlocked the lock! Get out before the lock locks you up again!");
         uint32_t now = HAL_GetTick();
@@ -255,7 +262,6 @@ int main(void)
             }
         }
         exit(0); //terminate game.
-
     }
 #endif
 
