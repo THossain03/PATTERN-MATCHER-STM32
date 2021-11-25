@@ -51,7 +51,7 @@ int * rand_output_generation(int size) { //assigns the sequence of indexes of po
     for (int i=0; i<size; i++) {  //assign random corresponding light number to blink.
         HAL_Delay(random_int(5,9, random()));
         array[i] = random_int(1,6, random());
-        SerialPutc(array[i]+48);  //***** DELETE this when program is fully debugged.
+        //SerialPutc(array[i]+48);  //***** DELETE this when program is fully debugged.
     }
     return array;
     free(array); //de-allocating the array.
@@ -147,8 +147,7 @@ bool level(int lvl_num) {  //main code for one level iteration
     int elements[num_elements];//main array for keypad input elements.
 
     //input generation begins.
-    SerialPuts("\n(Press blue button on board to start inputs)\n");
-    while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)); //await blue button press as stated by the serial port.
+    HAL_Delay(100); //Waits 1/10 of a second before initializing the keypad.
     InitializeKeypad(); // initializes the keypad for inputs
     while (true)
     {
