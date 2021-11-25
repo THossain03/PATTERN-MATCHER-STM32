@@ -244,9 +244,18 @@ int main(void)
         }
         exit(0); //exit program automatically if nothing occurs within the 15 min.
     } else {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);   // turn off LED
         SerialPuts("\nOh no! You were unable to break the lock. Hope to see you try again!");
-        exit(0);   
+        int r=0;
+        while (r<50){ // blinking the LED 50 times to indicate exit.
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+            HAL_Delay(100);  // 100 milliseconds == 1/10 second
+            r++;
+            if(r==5 && HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_5) == 0) {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, false);  //makes sure nothing else faultly flashes.
+            }
+        }
+        exit(0); //terminate game.
+
     }
 #endif
 
