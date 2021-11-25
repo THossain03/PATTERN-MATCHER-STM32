@@ -54,8 +54,8 @@ int * rand_output_generation(int size) { //assigns the sequence of indexes of po
 }
 
 //push back removal
-void output_by_LED(int LED_indx);  //outputting every specified LED for 1 second. 
-void output_by_LED(int LED_indx) {
+void output_by_LED(int LED_indx, int lvl_num);  //outputting every specified LED for varied seconds as levels progress. 
+void output_by_LED(int LED_indx, int lvl_num) {
     HAL_Delay(400);
     InitializePin(GPIOA, GPIO_PIN_1, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-1
     InitializePin(GPIOA, GPIO_PIN_0, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-2
@@ -63,29 +63,42 @@ void output_by_LED(int LED_indx) {
     InitializePin(GPIOB, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-4
     InitializePin(GPIOA, GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-5
     InitializePin(GPIOA, GPIO_PIN_6, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0); //LED-6
+    int sec=0;
+    if(lvl_num==1){ //This if-statment will reduce the time the led flashes for as the levels progress
+        sec=1250;
+    }else if (lvl_num==2){
+        sec=1000;
+    }else if (lvl_num==3){
+        sec=750;
+    }else if (lvl_num==4){
+        sec=500;
+    }else if (lvl_num==5){
+        sec=250;
+    }
+    
     if (LED_indx==1) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, true);
-        HAL_Delay(1000);
+        HAL_Delay(sec);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, false);
     } else if (LED_indx==2) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, true);
-        HAL_Delay(1000);
+        HAL_Delay(sec);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, false);
     } else if (LED_indx==3) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, true);
-        HAL_Delay(1000);
+        HAL_Delay(sec);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, false);
     } else if (LED_indx==4) {
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, true);
-        HAL_Delay(1000);
+        HAL_Delay(sec);
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, false);
     } else if (LED_indx==5) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, true);
-        HAL_Delay(1000);
+        HAL_Delay(sec);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, false);
     } else if (LED_indx==6) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, true);
-        HAL_Delay(1000);
+        HAL_Delay(sec);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, false);
     } else {  //we do not want a frustration for users in instances where they see they did it right, but got it wrong according to the program.
         SerialPuts("\n***\nAn error has occurred. Lock will be terminated immediately. Please try again.");
@@ -120,7 +133,7 @@ bool level(int lvl_num) {  //main code for one level iteration
     outputIndx_Arr = malloc(num_elements); //allocation of outputs
     outputIndx_Arr = rand_output_generation(num_elements);
     for(int i=0; i<num_elements; i++) {
-        output_by_LED(outputIndx_Arr[i]);
+        output_by_LED(outputIndx_Arr[i], lvl_num);
     }
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, true);
     HAL_Delay(300);
