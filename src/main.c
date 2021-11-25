@@ -127,8 +127,7 @@ bool level(int lvl_num) {  //main code for one level iteration
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,false); //to show through hardware that outputting is finished.
 
     //input array declarations.
-    int *elements;//main array for keypad input elements.
-    elements = malloc(num_elements);  //allocation of inputs.
+    int elements[num_elements];//main array for keypad input elements.
 
     //input generation begins.
     SerialPuts("\n(Press blue button on board to start inputs)\n");
