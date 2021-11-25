@@ -29,12 +29,16 @@ int sequence_lengthGENERATOR(int lvl_num);
 int sequence_lengthGENERATOR(int lvl_num) { //sequence will be between 4-12, 7-9, 10-12 depending on the level
     while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
     srand(HAL_GetTick());
-    if(lvl_num==1){ //Level 1 the sequencing willing be between 4-6
-        return random_int(4,6,random());
-    }else if(lvl_num==2){ //Level 2 the sequencing willing be between 7-9
-        return random_int(7,9,random()); 
-    }else{ //Level 3 the sequencing willing be between 10-12
-        return random_int(10,12,random());
+    if(lvl_num==1){ //Level 1 the sequencing willing be between 3-4
+        return random_int(3,4,random());
+    }else if (lvl_num==2){ //Level 2 the sequencing willing be between 5-6
+        return random_int(5,6,random());
+    }else if (lvl_num==3){ //Level 3 the sequencing willing be between 7-8
+        return random_int(7,8,random());
+    }else if (lvl_num==4){ //Level 4 the sequencing willing be between 9-10
+        return random_int(9,10,random());
+    }else{ //Level 5 the sequencing willing be between 11-12
+        return random_int(11,12,random());
     }
 }
 
@@ -72,7 +76,7 @@ void output_by_LED(int LED_indx, int lvl_num) {
         sec=750;
     }else if (lvl_num==4){
         sec=500;
-    }else if (lvl_num==5){
+    }else{
         sec=250;
     }
     
