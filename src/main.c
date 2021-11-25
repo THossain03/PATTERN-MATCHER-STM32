@@ -21,14 +21,18 @@
 
 #include "ece198.h"
 
+
+//The following are functions we have created in order to help us create the complexities of each level of the game, and actually run each level itself.
+//Input detection and output generation was all done in these following functions, while the iteration of levels was mainly done in the defined PATTERN_MATCH.
+
 int random_int(int min, int max, long randnum);
 int random_int(int min, int max, long randnum) { //a random number generator between a max and min value. (of int type)
    return min+((randnum)%(max-min+1));
 }
 
 int sequence_lengthGENERATOR(int lvl_num);
-int sequence_lengthGENERATOR(int lvl_num) { //sequence will be between 3-4, 5-6, 7-8, 9-10, 11-12 depending on the level
-    while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13));
+int sequence_lengthGENERATOR(int lvl_num) { //generates a sequence will be between 3-4, 5-6, 7-8, 9-10, 11-12 depending on the level
+    while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)); //awaits the blue button press to develop a length, note here this is only called before outputting begins.
     srand(HAL_GetTick());
     if (lvl_num==1) { //Level 1 the sequencing willing be between 3-4
         return random_int(3,4,random());
@@ -109,7 +113,7 @@ void output_by_LED(int LED_indx, int lvl_num) {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, false);
     } else {  //we do not want a frustration for users in instances where they see they did it right, but got it wrong according to the program.
         SerialPuts("\n***\nAn error has occurred. Lock will be terminated immediately. Please try again.");
-        exit(0);
+        exit(0); 
     }
 }
 
